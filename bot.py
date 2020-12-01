@@ -2,6 +2,8 @@ import os
 from os.path import join, dirname
 
 import discord
+from discord.ext import tasks
+
 from dotenv import load_dotenv
 from ath import *
 
@@ -20,7 +22,12 @@ async def on_ready():
     )
     for channel in guild.text_channels:
         if channel.name == 'ath-alerts':
-            await client.get_channel(channel.id).send(f"Test alert: BTC All time high is {BTC_ATH}")
-            await client.get_channel(channel.id).send(f"Test alert: ETH All time high is {ETH_ATH}")
+            channel_spec = client.get_channel(channel.id)
+            test.start(channel_spec)
+            
+@tasks.loop(minutes=1)
+async def test(channel_spec):
+    await channel_spec.send(f"Test alert every minute: BTC All time high is {BTC_ATH}")
+    await channel_spec.send(f"Test alert every minute: ETH All time high is {ETH_ATH}")
 
 client.run(TOKEN)
