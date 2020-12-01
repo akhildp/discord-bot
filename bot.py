@@ -1,11 +1,13 @@
 import os
+from os.path import join, dirname
 
 import discord
 from dotenv import load_dotenv
+from ath import *
 
 load_dotenv()
-TOKEN = os.getenv('DISCORD_TOKEN')
-GUILD = os.getenv('DISCORD_GUILD')
+TOKEN = os.getenv("DISCORD_TOKEN")
+GUILD = os.getenv("DISCORD_GUILD")
 
 client = discord.Client()
 
@@ -17,7 +19,8 @@ async def on_ready():
         f'{guild.name}(id: {guild.id})'
     )
     for channel in guild.text_channels:
-        if channel.name == 'general':
-            await client.get_channel(channel.id).send("bot is online")
+        if channel.name == 'ath-alerts':
+            await client.get_channel(channel.id).send(f"Test alert: BTC All time high is {BTC_ATH}")
+            await client.get_channel(channel.id).send(f"Test alert: ETH All time high is {ETH_ATH}")
 
 client.run(TOKEN)
