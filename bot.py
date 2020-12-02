@@ -1,15 +1,18 @@
 import os
-from os.path import join, dirname
+import pandas as pd
+from dotenv import load_dotenv
+import requests
 
 import discord
 from discord.ext import tasks
 
-from dotenv import load_dotenv
-from ath import *
+#from ath import *
 
 load_dotenv()
 TOKEN = os.getenv("DISCORD_TOKEN")
 GUILD = os.getenv("DISCORD_GUILD")
+
+ENDPOINT = 'https://api.coingecko.com/api/v3/coins/markets?vs_currency=usd&ids='
 
 client = discord.Client()
 
@@ -23,11 +26,15 @@ async def on_ready():
     for channel in guild.text_channels:
         if channel.name == 'ath-alerts':
             channel_spec = client.get_channel(channel.id)
-            test.start(channel_spec)
+            price_check.start(channel_spec)
             
-@tasks.loop(minutes=1)
-async def test(channel_spec):
-    await channel_spec.send(f"Test alert every minute: BTC All time high is {BTC_ATH}")
-    await channel_spec.send(f"Test alert every minute: ETH All time high is {ETH_ATH}")
+@tasks.loop(minutes=5)
+async def price_check(channel_spec):
+    df = pd.read_csv('coins_endpoints.csv').drop(['Unnamed: 0'],axis=1)
+    for coin in df['Name']:
+        ath_change_percentage = requests.get(ENDPOINT+coin).json()[0]['ath_change_percentage']
+        if abs(ath_change_percentage) <= 2:
+            await channel_spec.send(f"{coin} is within 2% of its all time high")
+    #await channel_spec.send(f"Test alert every minute: ETH All time high is {ETH_ATH}")
 
 client.run(TOKEN)
